@@ -1,1 +1,1 @@
-KSP-Controller-kRPC-Python-Arduino
+KSP Controller kRPC-Python-Arduino
