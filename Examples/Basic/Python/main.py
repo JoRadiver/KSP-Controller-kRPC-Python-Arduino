@@ -39,12 +39,64 @@ while running:
 			time.sleep(1) #KSP is not in flight mode. Wait one second and check again.
 			continue #skip the rest of the loop and check again.
 
+
+		vessel = server.space_center.active_vessel #the vessel we are using
+		
 		#We now tell the server what stuff we want streamed.
 		
+		#lets say we want to know the status of the solar panels and the oxidizer level.
+		
+		#there are two types of streams, you have to set them up differently for attributes and functions
+		#first for attributes:
+		solar_panels = self.con.add_stream(getattr, vessel.control, "solar_panels")
+		'''solar panels are an attribute of the class Control.
+		#you can find it here in the docs: https://krpc.github.io/krpc/python/api/space-center/control.html
+		#you will see under solar_panels, that it is an Attribute. 
+		because of that the add_stream function has to have gettatr as its first argument. 
+		The second argument is the class where our attribute is located.
+		Its in the control attribute of our vessel.
+		The last argument is the name of the argument, as it is in the docs.'''
+		#Just as s a further example apoapsis_altitude looks like this:
+		apoapsis_height = self.con.add_stream(getattr, vessel.orbit, "apoapsis_altitude")
+		
+		#now for functions:
+		has_oxidizer = self.con.add_stream(vessel.resources.has_resource, "Oxidizer")
+		#gives us a stream where we can check if the vessel can store a certain ressource.
+		#to know this is important because if the oxidizer tank blows up, it will become false.
+		#and then our oxidizer_max is zero, and if we divide to get the percentage, we divide by zero and our porgram aborts.
+		'''For functions, as a first argument we give the function. 
+		So on the ressources page (https://krpc.github.io/krpc/python/api/space-center/resources.html)
+		we see at the top that is is of course part of our vessel, because we want the ressources of our vessel.
+		the function we want is called has_resource(name) and it needs a name.
+		to get the names of the ressources you can do
+		for res in resources.all:
+			print (res.name)
+		To give a function the attributes it needs, we can just add them as further arguments of add_stream.
+		if we wanted to stream a function randomFunc(a, b, c) of our vessel, we would do
+		self.con.add_stream(vessel.randomFunc, a, b, c)'''
+		oxidizer_level = self.con.add_stream(vessel.resources.has_resource, "Oxidizer")
+		oxidizer_max = self.con.add_stream(vessel.resources.max, "Oxidizer")
+		oxidizer_current = self.con.add_stream(vessel.resources.amount, "Oxidizer")
 			
 		#And at last we can start sending the data from the Arduino.
 		while running:
+			#To get the data from the streams, we have to call our streams:
+			solar_panel_led = 0
+			if solar_panels(): #do not forget the () at the end, because those variables are actualy functions.
+				solar_panel_led = 1
+			
+			#now lets find out if we have below 5% fuel left:
+			fuel_low_led = 0
+			if has_oxidizer():
+				if oxidizer_level()/oxidizer_max() < 0.05:
+					fuel_low_led = 1
+					
+			#now we have the data we want to give the arduino, so we send it:
 			pass
+			
+			#next we need to receive data from the arduino.
+			pass
+						
 		
 	except krpc.error.RPCError as e:
 		print("KSP Scene Changed!")
