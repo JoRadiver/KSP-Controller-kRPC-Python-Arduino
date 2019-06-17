@@ -39,7 +39,7 @@ void loop(){
         digitalWrite(led2_pin, HIGH); 
       }
       else
-      {
+      { 
         digitalWrite(led2_pin, LOW); 
       }
       //outgoing messages look like this
