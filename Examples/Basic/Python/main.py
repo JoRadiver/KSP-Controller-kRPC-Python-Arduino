@@ -27,19 +27,23 @@ while server is None or arduino is None:
 		
 time.sleep(2)
 print("Started")
-# The program has sucessfully started
+# The program has successfully started
 while running:
-	# PROBLEM: If the vessel is destroyed, or we switch to the hangar or anything, we can no longer controll it
+	# PROBLEM: If the vessel is destroyed, or we switch to the hangar or anything, we can no longer control it
 	#  The Program will then fail.
 	# SOLUTION: the "try:" statement
 	#  If anything goes wrong inside a "try" block, 
 	#  we can continue the program if we "catch" the error in the except clauses.	
 	try: 
-		if scene != server.space_center.current_game_scene.flight:
-			time.sleep(1) # KSP is not in flight mode. Wait one second and check again.
-			continue # skip the rest of the loop and check again.
+		if server.krpc.current_game_scene != server.krpc.current_game_scene.flight:
+			print("Not in flight scene. Current scene: ", server.krpc.current_game_scene)
+			i = 0
+			while i < 20 and server.krpc.current_game_scene != server.krpc.current_game_scene.flight:
+				i += 1
+				time.sleep(1) # KSP is not in flight mode. Wait one second and check again.
+			continue  # skip the rest of the loop and check again.
 
-		vessel = server.space_center.active_vessel # the vessel we are using
+		vessel = server.space_center.active_vessel  # the vessel we are using
 		
 		# We now tell the server what stuff we want streamed.
 		
@@ -47,7 +51,7 @@ while running:
 		
 		# there are two types of streams, you have to set them up differently for attributes and functions
 		# first for attributes:
-		solar_panels = server.con.add_stream(getattr, vessel.control, "solar_panels")
+		solar_panels = server.add_stream(getattr, vessel.control, "solar_panels")
 		'''solar panels are an attribute of the class Control.
 		you can find it here in the docs: https://krpc.github.io/krpc/python/api/space-center/control.html
 		you will see under solar_panels, that it is an Attribute. 
@@ -56,26 +60,26 @@ while running:
 		Its in the control attribute of our vessel.
 		The last argument is the name of the argument, as it is in the docs.'''
 		# Just as s a further example apoapsis_altitude looks like this:
-		apoapsis_height = server.con.add_stream(getattr, vessel.orbit, "apoapsis_altitude")
+		apoapsis_height = server.add_stream(getattr, vessel.orbit, "apoapsis_altitude")
 		
 		# now for functions:
-		has_oxidizer = server.con.add_stream(vessel.resources.has_resource, "Oxidizer")
-		# gives us a stream where we can check if the vessel can store a certain ressource.
+		has_oxidizer = server.add_stream(vessel.resources.has_resource, "Oxidizer")
+		# gives us a stream where we can check if the vessel can store a certain resource.
 		# to know this is important because if the oxidizer tank blows up, it will become false.
-		# and then our oxidizer_max is zero, and if we divide to get the percentage, we divide by zero and our porgram aborts.
+		# and then our oxidizer_max is zero, and if we divide to get the percentage, we divide by zero and our program aborts.
 		'''For functions, as a first argument we give the function. 
-		So on the ressources page (https://krpc.github.io/krpc/python/api/space-center/resources.html)
-		we see at the top that is is of course part of our vessel, because we want the ressources of our vessel.
+		So on the resources page (https://krpc.github.io/krpc/python/api/space-center/resources.html)
+		we see at the top that is is of course part of our vessel, because we want the resources of our vessel.
 		the function we want is called has_resource(name) and it needs a name.
-		to get the names of the ressources you can do
+		to get the names of the resources you can do
 		for res in resources.all:
 			print (res.name)
 		To give a function the attributes it needs, we can just add them as further arguments of add_stream.
 		if we wanted to stream a function randomFunc(a, b, c) of our vessel, we would do
 		self.con.add_stream(vessel.randomFunc, a, b, c)'''
-		oxidizer_level = server.con.add_stream(vessel.resources.has_resource, "Oxidizer")
-		oxidizer_max = server.con.add_stream(vessel.resources.max, "Oxidizer")
-		oxidizer_current = server.con.add_stream(vessel.resources.amount, "Oxidizer")
+		oxidizer_level = server.add_stream(vessel.resources.has_resource, "Oxidizer")
+		oxidizer_max = server.add_stream(vessel.resources.max, "Oxidizer")
+		oxidizer_current = server.add_stream(vessel.resources.amount, "Oxidizer")
 			
 		# And at last we can start sending the data from the Arduino.
 		while running:
@@ -89,17 +93,17 @@ while running:
 					fuel_low_led = 1
 					
 			# now we have the data we want to give the arduino, so we send it:
-			pass # not done yet
+			pass  # not done yet
 			input_throttle = 211
 			
 			# next we need to receive data from the arduino.
-			pass #not done yet
+			pass  # not done yet
 
 	except krpc.error.RPCError as e:
 		print("KSP Scene Changed!")
 		time.sleep(1)
 	except ConnectionAbortedError:
-		print("KSP has Disconnected.")
-		running = False # we can now end the program.
+		print("KSP has Disconnected")
+		running = False  # we can now end the program.
 
 
