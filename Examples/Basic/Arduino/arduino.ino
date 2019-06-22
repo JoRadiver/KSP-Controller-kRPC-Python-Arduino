@@ -22,7 +22,7 @@ void setup(){
 void loop(){
   //
   if (Serial.available() > 0){ //we have input
-  //incoming messages look like this: 
+  //incoming messages look like this:
   //{'s', 'led1_state', led2_state'}
     if (Serial.read() == 's')
     { //we have detected the starting character
@@ -34,33 +34,35 @@ void loop(){
       {
         digitalWrite(led1_pin, LOW); //set the led state to off
       }
-      if (Serial.read() == '1'); //same for the second led
+      if (Serial.read() == '1') //same for the second led
       {
-        digitalWrite(led2_pin, HIGH); 
+        digitalWrite(led2_pin, HIGH);
       }
       else
-      { 
-        digitalWrite(led2_pin, LOW); 
+      {
+        digitalWrite(led2_pin, LOW);
       }
       //outgoing messages look like this
 	  //{'s', 'button1_state', 'button2_state', 'a', 'analog1_state', 'a', 'analog2_state', '\n'}
       Serial.print('s'); //send the starting character
-	  button1_state = digitalRead(button1_pin); //reading wether the button is pressed or not
+	  bool button1_state = digitalRead(button1_pin); //reading whether the button is pressed or not
 	  //sending that value
       Serial.print(button1_state);
+      Serial.print(';');  // this is explained later
 	  //same with the next
-	  button2_state = digitalRead(button2_pin);
+	  bool button2_state = digitalRead(button2_pin);
 	  Serial.print(button2_state);
-	  
-	  //the analog inputs range from 0 to 255, so they are not always the same ammount of digits, 
-	  //so we need to know where they start and end, therefore we send an a before and betwen, 
-	  //and a newline char at the very end of the message
-	  Serial.print('a');
-	  analog1_state = analog_read(analog1_pin);
+
+	  //the analog inputs range from 0 to 255, so they are not always the same amount of digits,
+	  //so we need to know where they start and end, therefore we send an separator before and between (we use ';'),
+	  //We also did this before because it makes decoding much easier.
+	  //Last we add a newline char at the very end of the message
+	  Serial.print(';');
+	  int analog1_state = analogRead(analog1_pin);
 	  Serial.print(analog1_state);
-	  Serial.print('a');
-	  analog2_state = analog_read(analog2_pin);
-	  Serial.println(analog2_state); //println also sends a newline char at the end of the message.  
+	  Serial.print(';');
+	  int analog2_state = analogRead(analog2_pin);
+	  Serial.println(analog2_state); //println also sends a newline char at the end of the message.
     }
   }
 }

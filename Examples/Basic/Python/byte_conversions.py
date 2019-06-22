@@ -12,7 +12,7 @@ def uint8_from_byte(thebyte):
 # gets the c++ char stored in a byte.
 # special letters are replaced by "-"
 def letter_from_byte(thebyte):
-	pass
+	try
 
 
 # gets a float stored in 4 bytes.
@@ -64,7 +64,7 @@ def bytelist_from_string(thestring):
 	pass
 
 
-# Encodes a number as a byte.
+# Encodes a number as a c++ byte
 def byte_from_uint8(number):
 	if number > 255 or number < 0:
 		raise ValueError("number must fit to uint8 0<x<255")
@@ -72,7 +72,7 @@ def byte_from_uint8(number):
 		pass
 
 
-# Encodes a larger number as 2 bytes.
+# Encodes a larger number as an c++ int
 def bytes_from_unint16(number):
 	pass
 

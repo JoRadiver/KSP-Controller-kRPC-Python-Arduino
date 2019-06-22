@@ -12,7 +12,8 @@ while server is None or arduino is None:
 		# The next line starts the connection with the server. It describes itself to the game as controller.
 		server = krpc.connect(name='Controller')
 		# Now let's connect to the Arduino
-		arduino = serial.Serial(port=select_port(), baudrate=112500)
+		arduino = serial.Serial(port=select_port(), baudrate=115200, timeout=1)
+		#  careful: if u get the baud number wrong, you will only receive garbage.
 	except ConnectionRefusedError:  # error raised whe failing to connect to the server.
 		print("Server offline")
 		time.sleep(5)  # sleep 5 seconds
@@ -93,11 +94,30 @@ while running:
 					fuel_low_led = 1
 					
 			# now we have the data we want to give the arduino, so we send it:
-			pass  # not done yet
-			input_throttle = 211
-			
+			arduino.write(b's')  # here you can see the weird b before the string.
+			arduino.write(solar_panel_led)
+			arduino.write(fuel_low_led)
+			arduino.write(b'\n')
+			# This b is because the arduino speaks a different language than python.
+			# The Arduino wants "bytes". If we write a string b'Hello World!',
+			# Then python encodes it as bytes.
+			# we could also do arduino.write('s'.encode('utf-8'))
+			# which is the same thing.
 			# next we need to receive data from the arduino.
-			pass  # not done yet
+			response = arduino.readline()  # now this received is again in the bytes format.
+			decoded = response.decode(encoding='utf-8', errors='ignore')  # and we need to translate it for python
+			decoded.strip('\n\r')  # we remove special chars which we do not need
+			start_location = decoded.find('s')  # we now look where the 's' in the string is.
+			if start_location == -1:
+				print("not found")
+				continue  # if its not there, we have to retry, e.g. just skip the decoding.
+			decoded = decoded[(start_location+1):]  # now we delete everything until after the s because we do not need it.
+			numbers = decoded.split(';')  # numbers is now a list of 3 numbers as strings example: ['1','0','135','127']
+			button1_state = int(numbers[0])  # first number
+			button2_state = int(numbers[1])  # second number
+			analog1_state = int(numbers[2])
+			analog2_state = int(numbers[3])
+			print(button1_state, '  ', button2_state, '  ', analog1_state, '  ', analog2_state)
 
 	except krpc.error.RPCError as e:
 		print("KSP Scene Changed!")
