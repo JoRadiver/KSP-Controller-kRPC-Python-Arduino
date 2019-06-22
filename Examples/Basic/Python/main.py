@@ -113,11 +113,18 @@ while running:
 				continue  # if its not there, we have to retry, e.g. just skip the decoding.
 			decoded = decoded[(start_location+1):]  # now we delete everything until after the s because we do not need it.
 			numbers = decoded.split(';')  # numbers is now a list of 3 numbers as strings example: ['1','0','135','127']
-			button1_state = int(numbers[0])  # first number
-			button2_state = int(numbers[1])  # second number
-			analog1_state = int(numbers[2])
-			analog2_state = int(numbers[3])
+			button1_state = int(numbers[0])  # we use this as brakes
+			button2_state = int(numbers[1])  # and this for light
+			analog1_state = int(numbers[2])  # this for yaw
+			analog2_state = int(numbers[3])  # and this for pitch
 			print(button1_state, '  ', button2_state, '  ', analog1_state, '  ', analog2_state)
+
+			# now we need to send this data to ksp
+			control = server.space_center.active_vessel.control  # this is where we write to to change things in ksp
+			control.brakes = bool(button1_state)
+			control.lights = bool(button2_state)
+			control.yaw = analog1_state/1024 - 0.5
+			control.pitch = analog2_state/1024 - 0.5
 
 	except krpc.error.RPCError as e:
 		print("KSP Scene Changed!")
