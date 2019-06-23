@@ -95,14 +95,16 @@ while running:
 					
 			# now we have the data we want to give the arduino, so we send it:
 			arduino.write(b's')  # here you can see the weird b before the string.
-			arduino.write(solar_panel_led)
-			arduino.write(fuel_low_led)
+			arduino.write(str(solar_panel_led).encode(encoding='utf-8', errors='ignore'))
+			arduino.write(str(fuel_low_led).encode(encoding='utf-8', errors='ignore'))
 			arduino.write(b'\n')
 			# This b is because the arduino speaks a different language than python.
 			# The Arduino wants "bytes". If we write a string b'Hello World!',
 			# Then python encodes it as bytes.
 			# we could also do arduino.write('s'.encode('utf-8'))
-			# which is the same thing.
+			# which is the same thing. This is what we are doing with the numbers. We convert them to string first,
+			# then we encode them in utf-8. errors='ignore' means just that letters, which are not specified
+			# in utf-8 like ä, é, etc. won't abort the program but just be ignored. you can also set it to 'replace'
 			# next we need to receive data from the arduino.
 			response = arduino.readline()  # now this received is again in the bytes format.
 			decoded = response.decode(encoding='utf-8', errors='ignore')  # and we need to translate it for python
@@ -113,10 +115,18 @@ while running:
 				continue  # if its not there, we have to retry, e.g. just skip the decoding.
 			decoded = decoded[(start_location+1):]  # now we delete everything until after the s because we do not need it.
 			numbers = decoded.split(';')  # numbers is now a list of 3 numbers as strings example: ['1','0','135','127']
+			# if anything went wong, we might not get 3 elements in the list.
+			# so we must make sure we have initialised all variables anyway.
+			button2_state = 0
+			analog1_state = 0
+			analog2_state = 0
 			button1_state = int(numbers[0])  # we use this as brakes
-			button2_state = int(numbers[1])  # and this for light
-			analog1_state = int(numbers[2])  # this for yaw
-			analog2_state = int(numbers[3])  # and this for pitch
+			if len(numbers) > 1:
+				button2_state = int(numbers[1])  # and this for light
+			if len(numbers) > 2:
+				analog1_state = int(numbers[2])  # this for yaw
+			if len(numbers) > 3:
+				analog2_state = int(numbers[3])  # and this for pitch
 			print(button1_state, '  ', button2_state, '  ', analog1_state, '  ', analog2_state)
 
 			# now we need to send this data to ksp
